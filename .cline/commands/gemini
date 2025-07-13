@@ -1,0 +1,29 @@
+#!/bin/bash
+# cline command: gemini
+
+PROMPT="$*"
+
+cat <<EOF > /tmp/chat_prompt.json
+{
+  "instances": [
+    {
+      "messages": [
+        {
+          "author": "user",
+          "content": "$PROMPT"
+        }
+      ]
+    }
+  ],
+  "parameters": {
+    "temperature": 0.7,
+    "maxOutputTokens": 512
+  }
+}
+EOF
+
+curl -s -X POST \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -H "Content-Type: application/json" \
+  https://us-central1-aiplatform.googleapis.com/v1/projects/$(gcloud config get-value project)/locations/us-central1/publishers/google/models/gemini-1.5-pro-preview-0409:predict \
+  -d 'tmp/chat_prompt.json' | jq '.predictions[0].content'
